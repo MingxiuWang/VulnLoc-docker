@@ -102,6 +102,13 @@ RUN ./configure
 RUN make
 RUN make install
 
+# Clone the VulnLoc-docker repository
+WORKDIR /root/workspace
+RUN git clone https://github.com/MingxiuWang/VulnLoc-docker.git
+
+# Move the test folder from the cloned repo to workspace
+RUN cp /root/workspace/VulnLoc-docker/test /root/workspace/test
+
 # prepare code
 WORKDIR /root/workspace
 RUN mkdir code
