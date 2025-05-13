@@ -2,8 +2,30 @@ FROM ubuntu:16.04
 
 # Dependencies
 RUN apt update --fix-missing
-RUN apt install -y build-essential 
+RUN apt install -y build-essential
+RUN apt-get update && apt-get install -y \
+    cmake \
+    ninja-build \
+    libssl-dev \
+    zlib1g-dev \
+    libgl1-mesa-dev \
+    libx11-dev \
+    libxext-dev \
+    libxrender-dev \
+    libxrandr-dev \
+    libxinerama-dev \
+    libxi-dev \
+    libxcursor-dev
 RUN apt install -y git vim unzip python-dev python-pip ipython wget libssl-dev g++-multilib doxygen transfig imagemagick ghostscript zlib1g-dev
+# Add PPA and install GCC-9
+RUN apt install -y software-properties-common
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y
+RUN apt update
+RUN apt install -y gcc-9 g++-9
+
+# Set gcc/g++ as default
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 \
+ && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 60
 
 WORKDIR /root
 RUN mkdir workspace
@@ -37,16 +59,15 @@ WORKDIR /root/workspace/deps
 # install dynamorio
 RUN git clone https://github.com/DynamoRIO/dynamorio.git
 WORKDIR /root/workspace/deps/dynamorio
+RUN git checkout cronbuild-8.0.18901
 RUN mkdir build
 WORKDIR /root/workspace/deps/dynamorio/build
-RUN cmake ../
+RUN cmake ../ || (cat CMakeFiles/CMakeError.log && false)
 RUN make
 WORKDIR /root/workspace/deps
 
 # set up the tracer
-COPY ./code/iftracer.zip /root/workspace/deps/iftracer.zip
-RUN unzip iftracer.zip
-RUN rm iftracer.zip
+COPY ./code/iftracer /root/workspace/deps/iftracer
 WORKDIR /root/workspace/deps/iftracer/iftracer
 RUN cmake CMakeLists.txt
 RUN make
