@@ -1,23 +1,36 @@
 #!/bin/bash
 set -e
 
-PYTHON_VERSION=3.11  # <-- Change this if needed
 
+PYTHON_VERSION=3.5.2
 PREFIX="$HOME/Wjw"
+PYTHON_INSTALL="$PREFIX/python$PYTHON_VERSION"
 WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
 mkdir -p "$DEPS"
 
-# Create virtual environment using Python 3.7
-python${PYTHON_VERSION} -m venv "$VENV_DIR"
+# === 1. 编译安装 Python 3.7 到本地路径 ===
+cd "$DEPS"
+if [ ! -d "Python-$PYTHON_VERSION" ]; then
+    wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
+    tar -xzf Python-$PYTHON_VERSION.tgz
+    rm Python-$PYTHON_VERSION.tgz
+fi
 
-# Activate the virtual environment
+cd Python-$PYTHON_VERSION
+./configure --prefix="$PYTHON_INSTALL" --enable-optimizations
+make -j$(nproc)
+make install
+
+# === 2. 使用 Python 3.7 创建虚拟环境 ===
+"$PYTHON_INSTALL/bin/python3.7" -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
-# Upgrade pip and install required Python packages inside venv
+# === 3. 安装 pip 包 ===
 pip install --upgrade pip
 pip install numpy==1.16.6 pyelftools
+
 
 # Set env paths
 export PATH="$PREFIX/bin:$PATH"
