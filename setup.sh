@@ -1,62 +1,92 @@
 #!/bin/bash
-set -e  # Exit on any error
+set -e
 
-# === CONFIGURATION ===
-target_cve="cve_2016_5314"
-base_folder="$HOME/workspace"
-out_folder="$base_folder/outputs"
-code_folder="$base_folder/code"
-venv_path="$base_folder/venv"
+PYTHON_VERSION=3.11  # <-- Change this if needed
 
-# === SETUP VENV ===
-if [ ! -d "$venv_path" ]; then
-    echo "Creating Python virtual environment at $venv_path"
-    python3 -m venv "$venv_path"
-fi
+PREFIX="$HOME/Wjw"
+WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
+VENV_DIR="$WORKSPACE/venv"
+DEPS="$WORKSPACE/deps"
+mkdir -p "$DEPS"
 
-echo "Activating virtual environment..."
-source "$venv_path/bin/activate"
+# Create virtual environment using Python 3.7
+python${PYTHON_VERSION} -m venv "$VENV_DIR"
 
-# === OPTIONAL: Install required Python packages ===
-echo "Installing required Python packages in virtual environment..."
+# Activate the virtual environment
+source "$VENV_DIR/bin/activate"
+
+# Upgrade pip and install required Python packages inside venv
 pip install --upgrade pip
 pip install numpy==1.16.6 pyelftools
 
-# === SETUP OUTPUT DIRECTORIES ===
-mkdir -p "$out_folder"
-echo "Created folder -> $out_folder"
+# Set env paths
+export PATH="$PREFIX/bin:$PATH"
+export LD_LIBRARY_PATH="$PREFIX/lib:$LD_LIBRARY_PATH"
+export CPATH="$PREFIX/include:$CPATH"
+export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
 
-cve_folder="$out_folder/$target_cve"
-mkdir -p "$cve_folder"
-echo "Created folder -> $cve_folder"
+cd "$DEPS"
 
-# === COPY CONFIG FILE ===
-cp ./config.ini "$code_folder"
+# Build CMake 3.16.2
+wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2.tar.gz
+tar -xvzf cmake-3.16.2.tar.gz
+rm cmake-3.16.2.tar.gz
+cd cmake-3.16.2
+./bootstrap --prefix="$PREFIX"
+make -j$(nproc)
+make install
+cd "$DEPS"
 
-# === FUZZING ===
-echo "The default number of processes is 10. VulnLoc will adjust it according to the number of CPUs on the local machine."
-echo "The default timeout is 4h. You can change the timeout in ./code/fuzz.py"
-echo "Execution progress is written to fuzz.log in the output folder. It will not appear in the terminal."
-echo "Please do not terminate the execution until VulnLoc timeouts automatically."
+# Clone and build DynamoRIO
+git clone https://github.com/DynamoRIO/dynamorio.git
+cd dynamorio
+git checkout cronbuild-8.0.18901
+mkdir build && cd build
+cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" ..
+make -j$(nproc)
+make install
+cd "$DEPS"
 
-cd "$code_folder"
-python fuzz.py --config_file ./config.ini --tag "$target_cve"
-echo "Finish fuzzing ..."
+# Setup the tracer
+cp -r ./code/iftracer ./iftracer
+cd iftracer/iftracer
+cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" CMakeLists.txt
+make -j$(nproc)
+cd ../ifLineTracer
+cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" CMakeLists.txt
+make -j$(nproc)
+cd "$WORKSPACE"
 
-# === EXTRACT RESULTS ===
-cve_out_folder=$(find "$out_folder/$target_cve" -maxdepth 1 -name 'output_*' -not -path '*/\.*' -type d | head -n 1)
-echo "Output Folder: $cve_out_folder"
+# Setup CVE-2016-5314
+mkdir -p "$WORKSPACE/cves/cve_2016_5314"
+cd "$WORKSPACE/cves/cve_2016_5314"
+cp ../../data/libtiff/cve_2016_5314/source.zip .
+unzip source.zip
+rm source.zip
+cd source
+./configure --prefix="$PREFIX"
+make -j$(nproc) CFLAGS="-static -ggdb" CXXFLAGS="-static -ggdb"
+cd ..
+cp ../../data/libtiff/cve_2016_5314/exploit ./exploit
 
-target_fuzz_path="$cve_out_folder/fuzz.log"
-poc_hash=$(sed '19q;d' "$target_fuzz_path" | awk '{print $NF}')
+# Build valgrind locally
+cd "$DEPS"
+wget https://sourceware.org/pub/valgrind/valgrind-3.15.0.tar.bz2
+tar xjf valgrind-3.15.0.tar.bz2
+rm valgrind-3.15.0.tar.bz2
+cd valgrind-3.15.0
+./configure --prefix="$PREFIX"
+make -j$(nproc)
+make install
 
-# === PATCH LOCALIZATION ===
-python patchloc.py \
-    --config_file ./config.ini \
-    --tag "$target_cve" \
-    --func calc \
-    --out_folder "$cve_out_folder" \
-    --poc_trace_hash "$poc_hash" \
-    --process_num 10
+# Clone VulnLoc-docker repo
+cd "$WORKSPACE"
+git clone https://github.com/MingxiuWang/VulnLoc-docker.git
+cp -r VulnLoc-docker/test ./test
 
-echo "✅ All done."
+# Copy your Python code
+mkdir -p "$WORKSPACE/code"
+cd "$WORKSPACE/code"
+cp ../../code/*.py ./
+
+echo "✅ Local environment setup completed in $WORKSPACE using Python $PYTHON_VERSION"
