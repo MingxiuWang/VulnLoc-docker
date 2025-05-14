@@ -1,81 +1,62 @@
 #!/bin/bash
-set -e
+set -e  # Exit on any error
 
-PREFIX="$HOME/Wjw"
-WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
-DEPS="$WORKSPACE/deps"
-mkdir -p "$DEPS"
+# === CONFIGURATION ===
+target_cve="cve_2016_5314"
+base_folder="$HOME/workspace"
+out_folder="$base_folder/outputs"
+code_folder="$base_folder/code"
+venv_path="$base_folder/venv"
 
-export PATH="$PREFIX/bin:$PATH"
-export LD_LIBRARY_PATH="$PREFIX/lib:$LD_LIBRARY_PATH"
-export CPATH="$PREFIX/include:$CPATH"
-export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
+# === SETUP VENV ===
+if [ ! -d "$venv_path" ]; then
+    echo "Creating Python virtual environment at $venv_path"
+    python3 -m venv "$venv_path"
+fi
 
-cd "$DEPS"
+echo "Activating virtual environment..."
+source "$venv_path/bin/activate"
 
-# Install Python packages locally
-pip install --user numpy==1.16.6 pyelftools
+# === OPTIONAL: Install required Python packages ===
+echo "Installing required Python packages in virtual environment..."
+pip install --upgrade pip
+pip install numpy==1.16.6 pyelftools
 
-# Build CMake 3.16.2
-wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2.tar.gz
-tar -xvzf cmake-3.16.2.tar.gz
-rm cmake-3.16.2.tar.gz
-cd cmake-3.16.2
-./bootstrap --prefix="$PREFIX"
-make -j$(nproc)
-make install
-cd "$DEPS"
+# === SETUP OUTPUT DIRECTORIES ===
+mkdir -p "$out_folder"
+echo "Created folder -> $out_folder"
 
-# Clone and build DynamoRIO
-git clone https://github.com/DynamoRIO/dynamorio.git
-cd dynamorio
-git checkout cronbuild-8.0.18901
-mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" ..
-make -j$(nproc)
-make install
-cd "$DEPS"
+cve_folder="$out_folder/$target_cve"
+mkdir -p "$cve_folder"
+echo "Created folder -> $cve_folder"
 
-# Setup the tracer (assumes ./code/iftracer is copied here)
-cp -r ./code/iftracer ./iftracer
-cd iftracer/iftracer
-cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" CMakeLists.txt
-make -j$(nproc)
-cd ../ifLineTracer
-cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" CMakeLists.txt
-make -j$(nproc)
-cd "$WORKSPACE"
+# === COPY CONFIG FILE ===
+cp ./config.ini "$code_folder"
 
-# Setup CVE-2016-5314
-mkdir -p "$WORKSPACE/cves/cve_2016_5314"
-cd "$WORKSPACE/cves/cve_2016_5314"
-cp ../../data/libtiff/cve_2016_5314/source.zip .
-unzip source.zip
-rm source.zip
-cd source
-./configure --prefix="$PREFIX"
-make -j$(nproc) CFLAGS="-static -ggdb" CXXFLAGS="-static -ggdb"
-cd ..
-cp ../../data/libtiff/cve_2016_5314/exploit ./exploit
+# === FUZZING ===
+echo "The default number of processes is 10. VulnLoc will adjust it according to the number of CPUs on the local machine."
+echo "The default timeout is 4h. You can change the timeout in ./code/fuzz.py"
+echo "Execution progress is written to fuzz.log in the output folder. It will not appear in the terminal."
+echo "Please do not terminate the execution until VulnLoc timeouts automatically."
 
-# Build valgrind locally
-cd "$DEPS"
-wget https://sourceware.org/pub/valgrind/valgrind-3.15.0.tar.bz2
-tar xjf valgrind-3.15.0.tar.bz2
-rm valgrind-3.15.0.tar.bz2
-cd valgrind-3.15.0
-./configure --prefix="$PREFIX"
-make -j$(nproc)
-make install
+cd "$code_folder"
+python fuzz.py --config_file ./config.ini --tag "$target_cve"
+echo "Finish fuzzing ..."
 
-# Clone VulnLoc-docker repo
-cd "$WORKSPACE"
-git clone https://github.com/MingxiuWang/VulnLoc-docker.git
-cp -r VulnLoc-docker/test ./test
+# === EXTRACT RESULTS ===
+cve_out_folder=$(find "$out_folder/$target_cve" -maxdepth 1 -name 'output_*' -not -path '*/\.*' -type d | head -n 1)
+echo "Output Folder: $cve_out_folder"
 
-# Copy your Python code (assumes it's already in ./code)
-mkdir -p "$WORKSPACE/code"
-cd "$WORKSPACE/code"
-cp ../../code/*.py ./
+target_fuzz_path="$cve_out_folder/fuzz.log"
+poc_hash=$(sed '19q;d' "$target_fuzz_path" | awk '{print $NF}')
 
-echo "✅ Local environment setup completed in $WORKSPACE"
+# === PATCH LOCALIZATION ===
+python patchloc.py \
+    --config_file ./config.ini \
+    --tag "$target_cve" \
+    --func calc \
+    --out_folder "$cve_out_folder" \
+    --poc_trace_hash "$poc_hash" \
+    --process_num 10
+
+echo "✅ All done."
