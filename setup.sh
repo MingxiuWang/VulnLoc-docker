@@ -3,7 +3,7 @@ set -e
 
 
 PYTHON_VERSION=3.5.2
-WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
+WORKSPACE="/srv/scratch/PAG/Wjw/VulnLoc-docker/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
 
 VENV_DIR="$WORKSPACE/venv"
@@ -26,7 +26,8 @@ make install
 "$PYTHON_INSTALL/bin/python3.5" -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
-# === 3. 安装 pip 包 ===
+# === 3. install numpy ===
+rm -rf numpy-1.16.6 numpy
 wget https://github.com/numpy/numpy/releases/download/v1.16.6/numpy-1.16.6.zip
 unzip numpy-1.16.6.zip
 rm numpy-1.16.6.zip
