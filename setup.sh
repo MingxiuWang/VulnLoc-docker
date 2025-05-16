@@ -27,6 +27,7 @@ if [ ! -d "$DEPS/openssl" ]; then
     cd "$DEPS"
     rm -rf openssl-$OPENSSL_VERSION*
 fi
+rm -rf $PYTHON_INSTALL/bin/python3.7
 # === Build and install Python with OpenSSL support ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     echo "🐍 Installing Python $PYTHON_VERSION with OpenSSL support..."
