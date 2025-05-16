@@ -28,8 +28,13 @@ make install
 source "$VENV_DIR/bin/activate"
 
 # === 3. 安装 pip 包 ===
-pip install --upgrade pip
-pip install numpy==1.16.6 pyelftools
+wget https://github.com/numpy/numpy/releases/download/v1.16.6/numpy-1.16.6.zip
+unzip numpy-1.16.6.zip
+rm numpy-1.16.6.zip
+mv numpy-1.16.6 numpy
+cd numpy
+python setup.py install
+cd "$DEPS_DIR"
 
 
 # Set env paths
