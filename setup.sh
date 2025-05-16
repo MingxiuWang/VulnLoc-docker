@@ -2,7 +2,7 @@
 set -e
 
 # === Configurations ===
-PYTHON_VERSION=3.5.2
+PYTHON_VERSION=3.7.2
 WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
 VENV_DIR="$WORKSPACE/venv"
@@ -22,8 +22,8 @@ cd openssl-$OPENSSL_VERSION
 make -j$(nproc)
 make install
 
-# === Step 1: Build and install Python 3.5.2 ===
-if [ ! -x "$PYTHON_INSTALL/bin/python3.5" ]; then
+# === Step 1: Build and install Python 3.7.2 ===
+if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     echo "🔧 Installing Python $PYTHON_VERSION..."
     wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
     tar -xzf Python-$PYTHON_VERSION.tgz
