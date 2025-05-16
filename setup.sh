@@ -40,7 +40,7 @@ if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
                 --with-openssl="$DEPS/openssl" \
                 --enable-optimizations
     make -j$(nproc)
-    make install
+    make install NO_TEST=1
     cd "$DEPS"
     rm -rf Python-$PYTHON_VERSION*
 fi
