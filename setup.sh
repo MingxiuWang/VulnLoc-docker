@@ -38,13 +38,13 @@ fi
 # === Step 2: Create virtualenv using installed Python ===
 if [ ! -d "$VENV_DIR" ]; then
     echo "🧪 Creating virtualenv..."
-    "$PYTHON_INSTALL/bin/python3.5" -m venv "$VENV_DIR"
+    "$PYTHON_INSTALL/bin/python3.7" -m venv "$VENV_DIR"
 fi
 
 source "$VENV_DIR/bin/activate"
 
 # === Step 3: Install setuptools manually ===
-wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
+wget https://bootstrap.pypa.io/pip/3.7/get-pip.py
 python3 get-pip.py
 rm get-pip.py
 
