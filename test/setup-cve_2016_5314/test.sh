@@ -35,3 +35,4 @@ target_fuzz_path="$cve_out_folder/fuzz.log"
 poc_hash=`sed '19q;d' $target_fuzz_path | awk '{print $NF}'`
 
 python patchloc.py --config_file ./config.ini --tag $target_cve --func calc --out_folder $cve_out_folder --poc_trace_hash $poc_hash --process_num 10
+echo "Finish patchloc ..."
