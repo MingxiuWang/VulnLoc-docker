@@ -42,7 +42,6 @@ if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     export LD_RUN_PATH="$DEPS/openssl/lib"
 
     ./configure --prefix="$PYTHON_INSTALL" \
-                --with-openssl="$DEPS/openssl" \
                 --enable-optimizations
     make -j$(nproc)
     make install
