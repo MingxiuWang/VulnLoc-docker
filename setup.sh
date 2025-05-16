@@ -24,7 +24,7 @@ make -j$(nproc)
 make install
 
 # === 2. 使用 Python 3.7 创建虚拟环境 ===
-"$PYTHON_INSTALL/bin/python3.7" -m venv "$VENV_DIR"
+"$PYTHON_INSTALL/bin/python3.5" -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 # === 3. 安装 pip 包 ===
