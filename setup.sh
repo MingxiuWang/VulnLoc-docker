@@ -1,61 +1,68 @@
 #!/bin/bash
 set -e
 
-# === Configurations ===
+# === Configuration ===
 PYTHON_VERSION=3.7.2
+OPENSSL_VERSION=1.1.1w
+NUMPY_VERSION=1.16.6
+
 WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
-SETUPTOOLS_VERSION="44.1.1"
-NUMPY_VERSION="1.16.6"
 
+# === Prepare directories ===
 mkdir -p "$DEPS"
 cd "$DEPS"
 
-# Build OpenSSL (required for ssl module)
-OPENSSL_VERSION=1.1.1w
-wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
-tar -xzf openssl-$OPENSSL_VERSION.tar.gz
-cd openssl-$OPENSSL_VERSION
-./config --prefix=$DEPS/openssl --openssldir=$DEPS/openssl shared zlib
-make -j$(nproc)
-make install
-
-# === Step 1: Build and install Python 3.7.2 ===
-if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
-    echo "🔧 Installing Python $PYTHON_VERSION..."
-    wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
-    tar -xzf Python-$PYTHON_VERSION.tgz
-    cd Python-$PYTHON_VERSION
-    ./configure --prefix="$PYTHON_INSTALL" --enable-optimizations
+# === 1. Build and install OpenSSL ===
+if [ ! -d "$DEPS/openssl" ]; then
+    echo "🔐 Installing OpenSSL $OPENSSL_VERSION..."
+    wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
+    tar -xzf openssl-$OPENSSL_VERSION.tar.gz
+    cd openssl-$OPENSSL_VERSION
+    ./config --prefix="$DEPS/openssl" --openssldir="$DEPS/openssl" shared zlib
     make -j$(nproc)
     make install
     cd "$DEPS"
-    rm -rf Python-$PYTHON_VERSION Python-$PYTHON_VERSION.tgz
+    rm -rf openssl-$OPENSSL_VERSION*
 fi
 
-# === Step 2: Create virtualenv using installed Python ===
+# === 2. Build and install Python ===
+if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
+    echo "🐍 Installing Python $PYTHON_VERSION..."
+    wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
+    tar -xzf Python-$PYTHON_VERSION.tgz
+    cd Python-$PYTHON_VERSION
+    ./configure --prefix="$PYTHON_INSTALL" --with-openssl="$DEPS/openssl" --enable-optimizations
+    make -j$(nproc)
+    make install
+    cd "$DEPS"
+    rm -rf Python-$PYTHON_VERSION*
+fi
+
+# === 3. Create virtual environment ===
 if [ ! -d "$VENV_DIR" ]; then
     echo "🧪 Creating virtualenv..."
     "$PYTHON_INSTALL/bin/python3.7" -m venv "$VENV_DIR"
 fi
 
+# === 4. Activate venv and install pip ===
 source "$VENV_DIR/bin/activate"
 
-# === Step 3: Install setuptools manually ===
+echo "📥 Installing pip..."
 wget https://bootstrap.pypa.io/pip/3.7/get-pip.py
-python3 get-pip.py
+python get-pip.py
 rm get-pip.py
 
-# === Step 4: Install numpy manually ===
-if ! python -c "import numpy" &> /dev/null; then
+# === 5. Install numpy ===
+if ! python -c "import numpy" &>/dev/null; then
     echo "📦 Installing numpy $NUMPY_VERSION..."
     cd "$DEPS"
     wget https://github.com/numpy/numpy/releases/download/v$NUMPY_VERSION/numpy-$NUMPY_VERSION.zip
     unzip numpy-$NUMPY_VERSION.zip
     cd numpy-$NUMPY_VERSION
-    python3 setup.py install
+    python setup.py install
     cd "$DEPS"
     rm -rf numpy-$NUMPY_VERSION*
 fi
@@ -137,3 +144,4 @@ cd "$WORKSPACE"
 cp -rn VulnLoc-docker/test ./test
 mkdir -p "$WORKSPACE/code"
 cp -n ../../code/*.py "$WORKSPACE*
+echo "✅ Setup complete!"
