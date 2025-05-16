@@ -27,7 +27,6 @@ if [ ! -d "$DEPS/openssl" ]; then
     cd "$DEPS"
     rm -rf openssl-$OPENSSL_VERSION*
 fi
-rm -rf $PYTHON_INSTALL/bin/python3.7
 # === Build and install Python with OpenSSL support ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     echo "🐍 Installing Python $PYTHON_VERSION with OpenSSL support..."
@@ -60,17 +59,17 @@ source "$VENV_DIR/bin/activate"
 
 echo "📥 Installing pip..."
 wget https://bootstrap.pypa.io/pip/3.7/get-pip.py
-python get-pip.py
+python3 get-pip.py
 rm get-pip.py
 
 # === 5. Install numpy ===
-if ! python -c "import numpy" &>/dev/null; then
+if ! python3 -c "import numpy" &>/dev/null; then
     echo "📦 Installing numpy $NUMPY_VERSION..."
     cd "$DEPS"
     wget https://github.com/numpy/numpy/releases/download/v$NUMPY_VERSION/numpy-$NUMPY_VERSION.zip
     unzip numpy-$NUMPY_VERSION.zip
     cd numpy-$NUMPY_VERSION
-    python setup.py install
+    python3 setup.py install
     cd "$DEPS"
     rm -rf numpy-$NUMPY_VERSION*
 fi
