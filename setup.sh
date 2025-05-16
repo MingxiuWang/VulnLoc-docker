@@ -35,16 +35,9 @@ fi
 source "$VENV_DIR/bin/activate"
 
 # === Step 3: Install setuptools manually ===
-if ! python -c "import setuptools" &> /dev/null; then
-    echo "📦 Installing setuptools $SETUPTOOLS_VERSION..."
-    cd "$DEPS"
-    wget https://files.pythonhosted.org/packages/source/s/setuptools/setuptools-$SETUPTOOLS_VERSION.tar.gz
-    tar -xzf setuptools-$SETUPTOOLS_VERSION.tar.gz
-    cd setuptools-$SETUPTOOLS_VERSION
-    python setup.py install
-    cd "$DEPS"
-    rm -rf setuptools-$SETUPTOOLS_VERSION*
-fi
+wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
+python3 get-pip.py
+rm get-pip.py
 
 # === Step 4: Install numpy manually ===
 if ! python -c "import numpy" &> /dev/null; then
@@ -53,7 +46,7 @@ if ! python -c "import numpy" &> /dev/null; then
     wget https://github.com/numpy/numpy/releases/download/v$NUMPY_VERSION/numpy-$NUMPY_VERSION.zip
     unzip numpy-$NUMPY_VERSION.zip
     cd numpy-$NUMPY_VERSION
-    python setup.py install
+    python3 setup.py install
     cd "$DEPS"
     rm -rf numpy-$NUMPY_VERSION*
 fi
