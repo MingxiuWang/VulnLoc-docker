@@ -13,7 +13,6 @@ DEPS="$WORKSPACE/deps"
 
 # === Prepare directories ===
 mkdir -p "$DEPS"
-mkdir -p "$PYTHON_INSTALL"
 cd "$DEPS"
 
 # === 1. Build and install OpenSSL ===
