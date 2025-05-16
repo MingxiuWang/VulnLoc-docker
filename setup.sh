@@ -3,9 +3,9 @@ set -e
 
 
 PYTHON_VERSION=3.5.2
-PREFIX="$HOME/Wjw"
-PYTHON_INSTALL="$PREFIX/python$PYTHON_VERSION"
 WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
+PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
+
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
 mkdir -p "$DEPS"
@@ -23,7 +23,6 @@ cd Python-$PYTHON_VERSION
 make -j$(nproc)
 make install
 
-# === 2. 使用 Python 3.7 创建虚拟环境 ===
 "$PYTHON_INSTALL/bin/python3.5" -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
@@ -38,10 +37,10 @@ cd "$DEPS_DIR"
 
 
 # Set env paths
-export PATH="$PREFIX/bin:$PATH"
-export LD_LIBRARY_PATH="$PREFIX/lib:$LD_LIBRARY_PATH"
-export CPATH="$PREFIX/include:$CPATH"
-export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PATH="$WORKSPACE/bin:$PATH"
+export LD_LIBRARY_PATH="$WORKSPACE/lib:$LD_LIBRARY_PATH"
+export CPATH="$WORKSPACE/include:$CPATH"
+export PKG_CONFIG_PATH="$WORKSPACE/lib/pkgconfig:$PKG_CONFIG_PATH"
 
 cd "$DEPS"
 
@@ -50,7 +49,7 @@ wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2.tar
 tar -xvzf cmake-3.16.2.tar.gz
 rm cmake-3.16.2.tar.gz
 cd cmake-3.16.2
-./bootstrap --prefix="$PREFIX"
+./bootstrap --prefix="$WORKSPACE"
 make -j$(nproc)
 make install
 cd "$DEPS"
@@ -60,7 +59,7 @@ git clone https://github.com/DynamoRIO/dynamorio.git
 cd dynamorio
 git checkout cronbuild-8.0.18901
 mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" ..
+cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" ..
 make -j$(nproc)
 make install
 cd "$DEPS"
@@ -68,10 +67,10 @@ cd "$DEPS"
 # Setup the tracer
 cp -r ./code/iftracer ./iftracer
 cd iftracer/iftracer
-cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" CMakeLists.txt
+cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" CMakeLists.txt
 make -j$(nproc)
 cd ../ifLineTracer
-cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" CMakeLists.txt
+cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" CMakeLists.txt
 make -j$(nproc)
 cd "$WORKSPACE"
 
@@ -82,7 +81,7 @@ cp ../../data/libtiff/cve_2016_5314/source.zip .
 unzip source.zip
 rm source.zip
 cd source
-./configure --prefix="$PREFIX"
+./configure --prefix="$WORKSPACE"
 make -j$(nproc) CFLAGS="-static -ggdb" CXXFLAGS="-static -ggdb"
 cd ..
 cp ../../data/libtiff/cve_2016_5314/exploit ./exploit
@@ -93,7 +92,7 @@ wget https://sourceware.org/pub/valgrind/valgrind-3.15.0.tar.bz2
 tar xjf valgrind-3.15.0.tar.bz2
 rm valgrind-3.15.0.tar.bz2
 cd valgrind-3.15.0
-./configure --prefix="$PREFIX"
+./configure --prefix="$WORKSPACE"
 make -j$(nproc)
 make install
 
