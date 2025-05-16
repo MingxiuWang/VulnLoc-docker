@@ -28,18 +28,26 @@ if [ ! -d "$DEPS/openssl" ]; then
     rm -rf openssl-$OPENSSL_VERSION*
 fi
 
-# === 2. Build and install Python ===
+# === Build and install Python with OpenSSL support ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
-    echo "🐍 Installing Python $PYTHON_VERSION..."
+    echo "🐍 Installing Python $PYTHON_VERSION with OpenSSL support..."
     wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
     tar -xzf Python-$PYTHON_VERSION.tgz
     cd Python-$PYTHON_VERSION
-    ./configure --prefix="$PYTHON_INSTALL" --with-openssl="$DEPS/openssl" --enable-optimizations
+
+    export CPPFLAGS="-I$DEPS/openssl/include"
+    export LDFLAGS="-L$DEPS/openssl/lib"
+    export LD_RUN_PATH="$DEPS/openssl/lib"
+
+    ./configure --prefix="$PYTHON_INSTALL" \
+                --with-openssl="$DEPS/openssl" \
+                --enable-optimizations
     make -j$(nproc)
     make install
     cd "$DEPS"
     rm -rf Python-$PYTHON_VERSION*
 fi
+
 
 # === 3. Create virtual environment ===
 if [ ! -d "$VENV_DIR" ]; then
