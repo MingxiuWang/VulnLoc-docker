@@ -1,110 +1,137 @@
 #!/bin/bash
 set -e
 
-
+# === Configurations ===
 PYTHON_VERSION=3.5.2
-WORKSPACE="/srv/scratch/PAG/Wjw/VulnLoc-docker/workspace"
+WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
-
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
-mkdir -p "$DEPS"
+SETUPTOOLS_VERSION="44.1.1"
+NUMPY_VERSION="1.16.6"
 
-# === 1. 编译安装 Python 3.7 到本地路径 ===
+mkdir -p "$DEPS"
 cd "$DEPS"
-if [ ! -d "Python-$PYTHON_VERSION" ]; then
+
+# === Step 1: Build and install Python 3.5.2 ===
+if [ ! -x "$PYTHON_INSTALL/bin/python3.5" ]; then
+    echo "🔧 Installing Python $PYTHON_VERSION..."
     wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
     tar -xzf Python-$PYTHON_VERSION.tgz
-    rm Python-$PYTHON_VERSION.tgz
+    cd Python-$PYTHON_VERSION
+    ./configure --prefix="$PYTHON_INSTALL" --enable-optimizations
+    make -j$(nproc)
+    make install
+    cd "$DEPS"
+    rm -rf Python-$PYTHON_VERSION Python-$PYTHON_VERSION.tgz
 fi
 
-cd Python-$PYTHON_VERSION
-./configure --prefix="$PYTHON_INSTALL" --enable-optimizations
-make -j$(nproc)
-make install
+# === Step 2: Create virtualenv using installed Python ===
+if [ ! -d "$VENV_DIR" ]; then
+    echo "🧪 Creating virtualenv..."
+    "$PYTHON_INSTALL/bin/python3.5" -m venv "$VENV_DIR"
+fi
 
-"$PYTHON_INSTALL/bin/python3.5" -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
-# === 3. install numpy ===
-rm -rf numpy-1.16.6 numpy
-wget https://github.com/numpy/numpy/releases/download/v1.16.6/numpy-1.16.6.zip
-unzip numpy-1.16.6.zip
-rm numpy-1.16.6.zip
-mv numpy-1.16.6 numpy
-cd numpy
-python setup.py install
-cd "$DEPS_DIR"
+# === Step 3: Install setuptools manually ===
+if ! python -c "import setuptools" &> /dev/null; then
+    echo "📦 Installing setuptools $SETUPTOOLS_VERSION..."
+    cd "$DEPS"
+    wget https://files.pythonhosted.org/packages/source/s/setuptools/setuptools-$SETUPTOOLS_VERSION.tar.gz
+    tar -xzf setuptools-$SETUPTOOLS_VERSION.tar.gz
+    cd setuptools-$SETUPTOOLS_VERSION
+    python setup.py install
+    cd "$DEPS"
+    rm -rf setuptools-$SETUPTOOLS_VERSION*
+fi
 
+# === Step 4: Install numpy manually ===
+if ! python -c "import numpy" &> /dev/null; then
+    echo "📦 Installing numpy $NUMPY_VERSION..."
+    cd "$DEPS"
+    wget https://github.com/numpy/numpy/releases/download/v$NUMPY_VERSION/numpy-$NUMPY_VERSION.zip
+    unzip numpy-$NUMPY_VERSION.zip
+    cd numpy-$NUMPY_VERSION
+    python setup.py install
+    cd "$DEPS"
+    rm -rf numpy-$NUMPY_VERSION*
+fi
 
-# Set env paths
+# === Set environment paths ===
 export PATH="$WORKSPACE/bin:$PATH"
 export LD_LIBRARY_PATH="$WORKSPACE/lib:$LD_LIBRARY_PATH"
 export CPATH="$WORKSPACE/include:$CPATH"
 export PKG_CONFIG_PATH="$WORKSPACE/lib/pkgconfig:$PKG_CONFIG_PATH"
 
-cd "$DEPS"
+# === Step 5: Build CMake ===
+if [ ! -x "$WORKSPACE/bin/cmake" ]; then
+    echo "⚙️  Building CMake..."
+    cd "$DEPS"
+    wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2.tar.gz
+    tar -xzf cmake-3.16.2.tar.gz
+    cd cmake-3.16.2
+    ./bootstrap --prefix="$WORKSPACE"
+    make -j$(nproc)
+    make install
+    cd "$DEPS"
+    rm -rf cmake-3.16.2*
+fi
 
-# Build CMake 3.16.2
-wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2.tar.gz
-tar -xvzf cmake-3.16.2.tar.gz
-rm cmake-3.16.2.tar.gz
-cd cmake-3.16.2
-./bootstrap --prefix="$WORKSPACE"
-make -j$(nproc)
-make install
-cd "$DEPS"
+# === Step 6: Build DynamoRIO ===
+if [ ! -d "$DEPS/dynamorio" ]; then
+    echo "⚙️  Cloning and building DynamoRIO..."
+    cd "$DEPS"
+    git clone https://github.com/DynamoRIO/dynamorio.git
+    cd dynamorio
+    git checkout cronbuild-8.0.18901
+    mkdir build && cd build
+    cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" ..
+    make -j$(nproc)
+    make install
+fi
 
-# Clone and build DynamoRIO
-git clone https://github.com/DynamoRIO/dynamorio.git
-cd dynamorio
-git checkout cronbuild-8.0.18901
-mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" ..
-make -j$(nproc)
-make install
-cd "$DEPS"
-
-# Setup the tracer
-cp -r ./code/iftracer ./iftracer
+# === Step 7: Build Tracers ===
+echo "⚙️  Building tracers..."
+cp -rn ./code/iftracer ./iftracer || true
 cd iftracer/iftracer
 cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" CMakeLists.txt
 make -j$(nproc)
 cd ../ifLineTracer
 cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" CMakeLists.txt
 make -j$(nproc)
-cd "$WORKSPACE"
 
-# Setup CVE-2016-5314
-mkdir -p "$WORKSPACE/cves/cve_2016_5314"
-cd "$WORKSPACE/cves/cve_2016_5314"
-cp ../../data/libtiff/cve_2016_5314/source.zip .
-unzip source.zip
-rm source.zip
+# === Step 8: Setup CVE-2016-5314 ===
+echo "🛠️  Setting up CVE-2016-5314 test case..."
+CVE_DIR="$WORKSPACE/cves/cve_2016_5314"
+mkdir -p "$CVE_DIR"
+cd "$CVE_DIR"
+cp -n ../../data/libtiff/cve_2016_5314/source.zip . || true
+unzip -o source.zip
 cd source
 ./configure --prefix="$WORKSPACE"
 make -j$(nproc) CFLAGS="-static -ggdb" CXXFLAGS="-static -ggdb"
 cd ..
-cp ../../data/libtiff/cve_2016_5314/exploit ./exploit
+cp -n ../../data/libtiff/cve_2016_5314/exploit ./exploit || true
 
-# Build valgrind locally
-cd "$DEPS"
-wget https://sourceware.org/pub/valgrind/valgrind-3.15.0.tar.bz2
-tar xjf valgrind-3.15.0.tar.bz2
-rm valgrind-3.15.0.tar.bz2
-cd valgrind-3.15.0
-./configure --prefix="$WORKSPACE"
-make -j$(nproc)
-make install
+# === Step 9: Build Valgrind ===
+if [ ! -x "$WORKSPACE/bin/valgrind" ]; then
+    echo "⚙️  Building Valgrind..."
+    cd "$DEPS"
+    wget https://sourceware.org/pub/valgrind/valgrind-3.15.0.tar.bz2
+    tar xjf valgrind-3.15.0.tar.bz2
+    cd valgrind-3.15.0
+    ./configure --prefix="$WORKSPACE"
+    make -j$(nproc)
+    make install
+    cd "$DEPS"
+    rm -rf valgrind-3.15.0*
+fi
 
-# Clone VulnLoc-docker repo
+# === Step 10: Clone VulnLoc-docker and copy code ===
+echo "📂 Copying VulnLoc code and test files..."
 cd "$WORKSPACE"
-git clone https://github.com/MingxiuWang/VulnLoc-docker.git
-cp -r VulnLoc-docker/test ./test
-
-# Copy your Python code
+[ ! -d "VulnLoc-docker" ] && git clone https://github.com/MingxiuWang/VulnLoc-docker.git
+cp -rn VulnLoc-docker/test ./test
 mkdir -p "$WORKSPACE/code"
-cd "$WORKSPACE/code"
-cp ../../code/*.py ./
-
-echo "✅ Local environment setup completed in $WORKSPACE using Python $PYTHON_VERSION"
+cp -n ../../code/*.py "$WORKSPACE*
