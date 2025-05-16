@@ -2,7 +2,7 @@
 set -e
 
 # === Configuration ===
-PYTHON_VERSION=3.7.2
+PYTHON_VERSION=3.7.9
 OPENSSL_VERSION=1.1.1w
 NUMPY_VERSION=1.16.6
 
@@ -28,18 +28,16 @@ if [ ! -d "$DEPS/openssl" ]; then
     rm -rf openssl-$OPENSSL_VERSION*
 fi
 rm -rf $PYTHON_INSTALL/bin/python3.7
-# === Build and install Python with OpenSSL support ===
+
+# === Step 1: Build Python ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
-    echo "🐍 Installing Python $PYTHON_VERSION with OpenSSL support..."
+    echo "🐍 Building Python $PYTHON_VERSION with OpenSSL..."
     wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
     tar -xzf Python-$PYTHON_VERSION.tgz
     cd Python-$PYTHON_VERSION
 
-    export CPPFLAGS="-I$DEPS/openssl/include"
-    export LDFLAGS="-L$DEPS/openssl/lib"
-    export LD_RUN_PATH="$DEPS/openssl/lib"
-
     ./configure --prefix="$PYTHON_INSTALL" \
+                --with-openssl="$DEPS/openssl" \
                 --enable-optimizations
     make -j$(nproc)
     make install
