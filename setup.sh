@@ -37,7 +37,7 @@ if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     cd Python-$PYTHON_VERSION
 
     ./configure --prefix="$PYTHON_INSTALL" \
-                --with-openssl="$DEPS/openssl" \
+                --with-openssl="$DEPS/openssl"
     make -j$(nproc)
     make install NO_TEST=1
     cd "$DEPS"
