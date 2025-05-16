@@ -6,13 +6,14 @@ PYTHON_VERSION=3.7.2
 OPENSSL_VERSION=1.1.1w
 NUMPY_VERSION=1.16.6
 
-WORKSPACE="/srv/scratch/PAG/Wjw/workspace"
+WORKSPACE="/srv/scratch/PAG/Wjw/VulnLoc-docker/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
 
 # === Prepare directories ===
 mkdir -p "$DEPS"
+mkdir -p "PYTHON_INSTALL"
 cd "$DEPS"
 
 # === 1. Build and install OpenSSL ===
@@ -28,6 +29,7 @@ if [ ! -d "$DEPS/openssl" ]; then
     rm -rf openssl-$OPENSSL_VERSION*
 fi
 rm -rf $PYTHON_INSTALL/bin/python3.7
+cd PYTHON_INSTALL
 # === Build and install Python with OpenSSL support ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     echo "🐍 Installing Python $PYTHON_VERSION with OpenSSL support..."
