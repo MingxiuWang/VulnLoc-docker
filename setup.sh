@@ -13,6 +13,15 @@ NUMPY_VERSION="1.16.6"
 mkdir -p "$DEPS"
 cd "$DEPS"
 
+# Build OpenSSL (required for ssl module)
+OPENSSL_VERSION=1.1.1w
+wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
+tar -xzf openssl-$OPENSSL_VERSION.tar.gz
+cd openssl-$OPENSSL_VERSION
+./config --prefix=$DEPS/openssl --openssldir=$DEPS/openssl shared zlib
+make -j$(nproc)
+make install
+
 # === Step 1: Build and install Python 3.5.2 ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.5" ]; then
     echo "🔧 Installing Python $PYTHON_VERSION..."
