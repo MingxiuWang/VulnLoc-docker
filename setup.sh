@@ -13,7 +13,7 @@ DEPS="$WORKSPACE/deps"
 
 # === Prepare directories ===
 mkdir -p "$DEPS"
-mkdir -p "PYTHON_INSTALL"
+mkdir -p "$PYTHON_INSTALL"
 cd "$DEPS"
 
 # === 1. Build and install OpenSSL ===
@@ -29,7 +29,7 @@ if [ ! -d "$DEPS/openssl" ]; then
     rm -rf openssl-$OPENSSL_VERSION*
 fi
 rm -rf $PYTHON_INSTALL/bin/python3.7
-cd PYTHON_INSTALL
+cd $PYTHON_INSTALL
 # === Build and install Python with OpenSSL support ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     echo "🐍 Installing Python $PYTHON_VERSION with OpenSSL support..."
