@@ -119,7 +119,7 @@ if [ ! -d "$DEPS/dynamorio" ]; then
     cd "$DEPS"
     git clone https://github.com/DynamoRIO/dynamorio.git
     cd dynamorio
-    git checkout cronbuild-8.0.18901
+    git checkout release_9.0.1
     mkdir build && cd build
     cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" ..
     make -j$(nproc)
