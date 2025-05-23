@@ -7,8 +7,8 @@ OPENSSL_VERSION=1.1.1w
 NUMPY_VERSION=1.16.6
 CMAKE_VERSION=3.15.5
 
-set(ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-set(WORKSPACE "${ROOT}/workspace")
+CUR_ROOT=${CMAKE_CURRENT_SOURCE_DIR}
+WORKSPACE="$CUR_ROOT/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
@@ -127,7 +127,7 @@ if [ ! -d "$DEPS/dynamorio" ]; then
 fi
 
 export CMAKE_PREFIX_PATH="$WORKSPACE:$CMAKE_PREFIX_PATH"
-cd $ROOT
+cd $CUR_ROOT
 # === Step 7: Build Tracers ===
 echo "⚙️  Building tracers..."
 cp -rn ./code/iftracer ./iftracer || true
