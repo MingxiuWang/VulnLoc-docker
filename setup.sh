@@ -73,6 +73,24 @@ if ! python -c "import numpy" &>/dev/null; then
     pip install --no-cache-dir numpy==$NUMPY_VERSION
 fi
 
+# === 6. Build CMake (💡 Put this part exactly like this) ===
+if [ ! -x "$WORKSPACE/bin/cmake" ]; then
+    echo "⚙️  Building CMake $CMAKE_VERSION..."
+    cd "$DEPS"
+    wget https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION.tar.gz
+    tar -xzf cmake-$CMAKE_VERSION.tar.gz
+    cd cmake-$CMAKE_VERSION
+
+    # ✅ Note the extra args to force OpenSSL linkage
+    ./bootstrap --prefix="$WORKSPACE" \
+      -- -DCMAKE_USE_OPENSSL=ON -DOPENSSL_ROOT_DIR="$DEPS/openssl"
+
+    make -j$(nproc)
+    make install
+    cd "$DEPS"
+    rm -rf cmake-$CMAKE_VERSION*
+fi
+
 # === Set environment paths ===
 export PATH="$WORKSPACE/bin:$PATH"
 export LD_LIBRARY_PATH="$WORKSPACE/lib:$LD_LIBRARY_PATH"
