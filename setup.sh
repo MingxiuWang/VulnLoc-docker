@@ -126,16 +126,17 @@ if [ ! -d "$DEPS/dynamorio" ]; then
     make install
 fi
 
-export CMAKE_PREFIX_PATH="$WORKSPACE:$CMAKE_PREFIX_PATH"
+
 cd $DEPS
 # === Step 7: Build Tracers ===
 echo "⚙️  Building tracers..."
 cp -rn $CUR_ROOT/code/iftracer ./iftracer || true
 cd iftracer/iftracer
-cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" CMakeLists.txt
+echo "$(pwd)/../../workspace/deps/dynamorio/build"
+cmake  CMakeLists.txt
 make -j$(nproc)
 cd ../ifLineTracer
-cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" CMakeLists.txt
+cmake  CMakeLists.txt
 make -j$(nproc)
 
 # === Step 8: Setup CVE-2016-5314 ===
