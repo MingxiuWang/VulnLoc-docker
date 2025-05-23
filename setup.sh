@@ -15,7 +15,7 @@ WORKSPACE="$CUR_ROOT/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
-GCC_INSTALL="DEPS/gcc-$GCC_VERSION-install"
+GCC_INSTALL="$DEPS/gcc-$GCC_VERSION-install"
 
 # === Prepare directories ===
 mkdir -p "$DEPS"
