@@ -112,6 +112,28 @@ if [ ! -x "$WORKSPACE/bin/cmake" ]; then
     cd "$DEPS"
     rm -rf cmake-3.16.2*
 fi
+
+# === 1.5: Build and install GCC 9.4.0 ===
+if [ ! -x "$GCC_INSTALL/bin/gcc" ]; then
+    echo "🧰 Building GCC $GCC_VERSION..."
+    cd "$DEPS"
+    wget http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz
+    tar -xf gcc-$GCC_VERSION.tar.gz
+    cd gcc-$GCC_VERSION
+    ./contrib/download_prerequisites
+    mkdir build-gcc && cd build-gcc
+    ../configure --prefix="$GCC_INSTALL" --enable-languages=c,c++ --disable-multilib
+    make -j$(nproc)
+    make install
+    cd "$DEPS"
+    rm -rf gcc-$GCC_VERSION*
+fi
+
+# Use local GCC
+export PATH="$GCC_INSTALL/bin:$PATH"
+export CC="$GCC_INSTALL/bin/gcc"
+export CXX="$GCC_INSTALL/bin/g++"
+
 rm -rf "$DEPS/dynamorio"
 # === Step 6: Build DynamoRIO ===
 if [ ! -d "$DEPS/dynamorio" ]; then
