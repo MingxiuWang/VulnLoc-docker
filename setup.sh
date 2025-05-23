@@ -130,9 +130,10 @@ fi
 cd $DEPS
 # === Step 7: Build Tracers ===
 echo "⚙️  Building tracers..."
-cp -rn $CUR_ROOT/code/iftracer ./iftracer || true
+rm -rf ./iftracer
+cp -r $CUR_ROOT/code/iftracer ./iftracer || true
 cd iftracer/iftracer
-echo "$(pwd)/../../workspace/deps/dynamorio/build"
+echo "$(pwd)/../../dynamorio/build"
 cmake  CMakeLists.txt
 make -j$(nproc)
 cd ../ifLineTracer
