@@ -7,8 +7,8 @@ OPENSSL_VERSION=1.1.1w
 NUMPY_VERSION=1.16.6
 CMAKE_VERSION=3.15.5
 
-
-WORKSPACE="/srv/scratch/PAG/Wjw/VulnLoc-docker/workspace"
+ROOT="/srv/scratch/PAG/Wjw/VulnLoc-docker"
+WORKSPACE="$ROOT/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
@@ -125,7 +125,7 @@ if [ ! -d "$DEPS/dynamorio" ]; then
     make -j$(nproc)
     make install
 fi
-
+cd ROOT
 # === Step 7: Build Tracers ===
 echo "⚙️  Building tracers..."
 cp -rn ./code/iftracer ./iftracer || true
