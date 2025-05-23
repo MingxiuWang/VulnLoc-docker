@@ -125,7 +125,9 @@ if [ ! -x "$GCC_INSTALL/bin/gcc" ]; then
     tar -xf gcc-$GCC_VERSION.tar.gz
     cd gcc-$GCC_VERSION
     ./contrib/download_prerequisites
-    mkdir build-gcc && cd build-gcc
+    rm -rf build-gcc
+    mkdir build-gcc
+    cd build-gcc
     ../configure --prefix="$GCC_INSTALL" --enable-languages=c,c++ --disable-multilib
     make -j$(nproc)
     make install
