@@ -125,7 +125,7 @@ if [ ! -d "$DEPS/dynamorio" ]; then
     make -j$(nproc)
     make install
 fi
-cd ROOT
+cd $ROOT
 # === Step 7: Build Tracers ===
 echo "⚙️  Building tracers..."
 cp -rn ./code/iftracer ./iftracer || true
