@@ -127,10 +127,10 @@ if [ ! -d "$DEPS/dynamorio" ]; then
 fi
 
 export CMAKE_PREFIX_PATH="$WORKSPACE:$CMAKE_PREFIX_PATH"
-cd $CUR_ROOT
+cd $DEPS
 # === Step 7: Build Tracers ===
 echo "⚙️  Building tracers..."
-cp -rn ./code/iftracer ./iftracer || true
+cp -rn $CUR_ROOT/code/iftracer ./iftracer || true
 cd iftracer/iftracer
 cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" CMakeLists.txt
 make -j$(nproc)
