@@ -14,6 +14,9 @@ DEPS="$WORKSPACE/deps"
 # === Prepare directories ===
 mkdir -p "$DEPS"
 cd "$DEPS"
+rm -rf "$PYTHON_INSTALL"
+rm -rf "$DEPS/Python-$PYTHON_VERSION"*
+
 
 # === 1. Build and install OpenSSL ===
 if [ ! -d "$DEPS/openssl" ]; then
@@ -35,6 +38,10 @@ if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
     tar -xzf Python-$PYTHON_VERSION.tgz
     cd Python-$PYTHON_VERSION
+
+    export CFLAGS="-I$DEPS/openssl/include"
+    export LDFLAGS="-L$DEPS/openssl/lib"
+    export LD_LIBRARY_PATH="$DEPS/openssl/lib:$LD_LIBRARY_PATH"
 
     ./configure --prefix="$PYTHON_INSTALL" \
                 --with-openssl="$DEPS/openssl"
