@@ -130,7 +130,7 @@ fi
 cd $DEPS
 # === Step 7: Build Tracers ===
 echo "⚙️  Building tracers..."
-rm -rf ./iftracer
+rm -rf iftracer
 cp -r $CUR_ROOT/code/iftracer ./iftracer || true
 cd iftracer/iftracer
 echo "$(pwd)/../../dynamorio/build"
