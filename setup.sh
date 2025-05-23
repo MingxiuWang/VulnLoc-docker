@@ -125,6 +125,8 @@ if [ ! -d "$DEPS/dynamorio" ]; then
     make -j$(nproc)
     make install
 fi
+
+export CMAKE_PREFIX_PATH="$WORKSPACE:$CMAKE_PREFIX_PATH"
 cd $ROOT
 # === Step 7: Build Tracers ===
 echo "⚙️  Building tracers..."
