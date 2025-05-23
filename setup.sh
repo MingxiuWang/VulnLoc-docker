@@ -112,7 +112,7 @@ if [ ! -x "$WORKSPACE/bin/cmake" ]; then
     cd "$DEPS"
     rm -rf cmake-3.16.2*
 fi
-
+rm -rf "$DEPS/dynamorio"
 # === Step 6: Build DynamoRIO ===
 if [ ! -d "$DEPS/dynamorio" ]; then
     echo "⚙️  Cloning and building DynamoRIO..."
@@ -121,7 +121,7 @@ if [ ! -d "$DEPS/dynamorio" ]; then
     cd dynamorio
     git checkout release_9.0.1
     mkdir build && cd build
-    cmake -DCMAKE_INSTALL_PREFIX="$WORKSPACE" ..
+    cmake -DDynamoRIO_BUILD_DRUTIL=ON -DDynamoRIO_BUILD_DRMGR=ON -DCMAKE_INSTALL_PREFIX="$WORKSPACE" ..
     make -j$(nproc)
     make install
 fi
