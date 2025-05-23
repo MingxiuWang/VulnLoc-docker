@@ -122,6 +122,8 @@ if [ ! -d "$DEPS/dynamorio" ]; then
     git checkout release_9.0.1
     mkdir build && cd build
     cmake -DDynamoRIO_BUILD_DRUTIL=ON \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DDRCMAKE_SKIP_WARNINGS_AS_ERRORS=ON\
     -DDynamoRIO_BUILD_DRMGR=ON \
     -DCMAKE_INSTALL_PREFIX="$WORKSPACE" \
     -DCMAKE_C_FLAGS="-Wno-error" -DCMAKE_CXX_FLAGS="-Wno-error"  ..
