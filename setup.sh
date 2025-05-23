@@ -27,7 +27,7 @@ if [ ! -d "$DEPS/openssl" ]; then
     cd "$DEPS"
     rm -rf openssl-$OPENSSL_VERSION*
 fi
-rm -rf "$PYTHON_INSTALL/bin/python3.7"
+
 
 # === Step 1: Build Python ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
@@ -56,19 +56,14 @@ source "$VENV_DIR/bin/activate"
 
 echo "📥 Installing pip..."
 wget https://bootstrap.pypa.io/pip/3.7/get-pip.py
-python3 get-pip.py
+python get-pip.py
 rm get-pip.py
 
 # === 5. Install numpy ===
-if ! python3 -c "import numpy" &>/dev/null; then
+# === 5. Install numpy ===
+if ! python -c "import numpy" &>/dev/null; then
     echo "📦 Installing numpy $NUMPY_VERSION..."
-    cd "$DEPS"
-    wget https://github.com/numpy/numpy/releases/download/v$NUMPY_VERSION/numpy-$NUMPY_VERSION.zip
-    unzip numpy-$NUMPY_VERSION.zip
-    cd numpy-$NUMPY_VERSION
-    python3 setup.py install
-    cd "$DEPS"
-    rm -rf numpy-$NUMPY_VERSION*
+    pip install --no-cache-dir numpy==$NUMPY_VERSION
 fi
 
 # === Set environment paths ===
@@ -147,5 +142,5 @@ cd "$WORKSPACE"
 [ ! -d "VulnLoc-docker" ] && git clone https://github.com/MingxiuWang/VulnLoc-docker.git
 cp -rn VulnLoc-docker/test ./test
 mkdir -p "$WORKSPACE/code"
-cp -n ../../code/*.py "$WORKSPACE*
+cp -n ../../code/*.py "$WORKSPACE"
 echo "✅ Setup complete!"
