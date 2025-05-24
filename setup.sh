@@ -15,7 +15,7 @@ WORKSPACE="$CUR_ROOT/workspace"
 PYTHON_INSTALL="$WORKSPACE/python$PYTHON_VERSION"
 VENV_DIR="$WORKSPACE/venv"
 DEPS="$WORKSPACE/deps"
-GCC_INSTALL="$DEPS/gcc-$GCC_VERSION-install"
+GCC_INSTALL="$DEPS/gcc-$GCC_VERSION"
 
 # === Prepare directories ===
 mkdir -p "$DEPS"
@@ -115,9 +115,9 @@ if [ ! -x "$WORKSPACE/bin/cmake" ]; then
     rm -rf cmake-3.16.2*
 fi
 
-# === 1.5: Download and install prebuilt GCC 9.5.0 ===
+# === 1.5: Download and install prebuilt GCC 9.4.0 ===
 if [ ! -x "$GCC_INSTALL/bin/gcc" ]; then
-    echo "📦 Downloading prebuilt GCC 9.5.0..."
+    echo "📦 Downloading prebuilt GCC 9.4.0..."
     cd "$DEPS"
     wget http://ftp.gnu.org/gnu/gcc/gcc-9.4.0/gcc-9.4.0.tar.gz
     tar -xzf gcc-9.4.0.tar.gz
