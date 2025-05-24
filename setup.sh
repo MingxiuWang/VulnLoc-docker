@@ -6,7 +6,7 @@ PYTHON_VERSION=3.7.9
 OPENSSL_VERSION=1.1.1w
 NUMPY_VERSION=1.16.6
 CMAKE_VERSION=3.15.5
-GCC_VERSION=9.4.0
+GCC_VERSION=9.5.0
 
 
 
@@ -117,22 +117,14 @@ if [ ! -x "$WORKSPACE/bin/cmake" ]; then
     rm -rf cmake-3.16.2*
 fi
 
-# === 1.5: Build and install GCC 9.4.0 ===
+# === 1.5: Download and install prebuilt GCC 9.5.0 ===
 if [ ! -x "$GCC_INSTALL/bin/gcc" ]; then
-    echo "🧰 Building GCC $GCC_VERSION..."
+    echo "📦 Downloading prebuilt GCC 9.5.0..."
     cd "$DEPS"
-    wget http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz
-    tar -xf gcc-$GCC_VERSION.tar.gz
-    cd gcc-$GCC_VERSION
-    ./contrib/download_prerequisites
-    rm -rf build-gcc
-    mkdir build-gcc
-    cd build-gcc
-    ../configure --prefix="$GCC_INSTALL" --enable-languages=c,c++ --disable-multilib
-    make -j$(nproc)
-    make install
-    cd "$DEPS"
-    rm -rf gcc-$GCC_VERSION*
+    wget https://github.com/bjjwwang/SVF-LLVM/releases/download/16.0.0/gcc-9.5-ubuntu16.04-x86_64.zip
+    unzip gcc-9.5-ubuntu16.04-x86_64.zip
+    mv gcc-9.5-ubuntu16.04-x86_64 "$GCC_INSTALL"
+    rm gcc-9.5-ubuntu16.04-x86_64.zip
 fi
 
 # Use local GCC
