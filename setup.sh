@@ -20,8 +20,6 @@ GCC_INSTALL="$DEPS/gcc-$GCC_VERSION-install"
 # === Prepare directories ===
 mkdir -p "$DEPS"
 cd "$DEPS"
-rm -rf "$PYTHON_INSTALL"
-rm -rf "$DEPS/Python-$PYTHON_VERSION"*
 
 
 # === 1. Build and install OpenSSL ===
@@ -126,7 +124,7 @@ if [ ! -x "$GCC_INSTALL/bin/gcc" ]; then
     cd gcc-9.4.0
     ./contrib/download_prerequisites
     mkdir build && cd build
-    ../configure --prefix=$HOME/gcc-9.4.0-install --enable-languages=c,c++ --disable-multilib
+    ../configure --prefix="$GCC_INSTALL" --enable-languages=c,c++ --disable-multilib
     make -j$(nproc)
     make install
 fi
