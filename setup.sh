@@ -123,7 +123,7 @@ if [ ! -x "$GCC_INSTALL/bin/gcc" ]; then
     cd "$DEPS"
     wget https://github.com/bjjwwang/SVF-LLVM/releases/download/16.0.0/gcc-9.5-ubuntu16.04-x86_64.zip
     unzip gcc-9.5-ubuntu16.04-x86_64.zip
-    mv gcc-9.5-ubuntu16.04-x86_64 "$GCC_INSTALL"
+    mv gcc-9.5 "$GCC_INSTALL"
     rm gcc-9.5-ubuntu16.04-x86_64.zip
 fi
 
