@@ -35,7 +35,7 @@ if [ ! -d "$DEPS/openssl" ]; then
     rm -rf openssl-$OPENSSL_VERSION*
 fi
 
-
+rm -rf "$PYTHON_INSTALL"
 # === Step 1: Build Python ===
 if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     echo "🐍 Building Python $PYTHON_VERSION with OpenSSL..."
