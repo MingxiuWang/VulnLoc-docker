@@ -43,9 +43,17 @@ if [ ! -x "$PYTHON_INSTALL/bin/python3.7" ]; then
     tar -xzf Python-$PYTHON_VERSION.tgz
     cd Python-$PYTHON_VERSION
 
-    export CFLAGS="-I$DEPS/openssl/include"
+
+    export CPPFLAGS="-I$DEPS/openssl/include"
     export LDFLAGS="-L$DEPS/openssl/lib"
+    export LD_RUN_PATH="$DEPS/openssl/lib"
     export LD_LIBRARY_PATH="$DEPS/openssl/lib:$LD_LIBRARY_PATH"
+
+    ./configure --prefix="$PYTHON_INSTALL" \
+                --with-openssl="$DEPS/openssl" \
+                --enable-optimizations
+    make -j$(nproc)
+    make install
 
     ./configure --prefix="$PYTHON_INSTALL" \
                 --with-openssl="$DEPS/openssl"
@@ -123,6 +131,7 @@ if [ ! -x "$GCC_INSTALL/bin/gcc" ]; then
     tar -xzf gcc-9.4.0.tar.gz
     cd gcc-9.4.0
     ./contrib/download_prerequisites
+    rm -rf build
     mkdir build && cd build
     ../configure --prefix="$GCC_INSTALL" --enable-languages=c,c++ --disable-multilib
     make -j$(nproc)
