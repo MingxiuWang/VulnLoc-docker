@@ -141,7 +141,7 @@ if [ ! -d "$DEPS/dynamorio" ]; then
     cd "$DEPS"
     git clone https://github.com/DynamoRIO/dynamorio.git
     cd dynamorio
-    git checkout release_9.0.1
+    git checkout cronbuild-8.0.18901
     mkdir build && cd build
     cmake -DDynamoRIO_BUILD_DRUTIL=ON \
     -DCMAKE_BUILD_TYPE=Release \
